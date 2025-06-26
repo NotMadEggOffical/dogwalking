@@ -307,7 +307,6 @@
       event.target.classList.add('active');
       
       currentChatUser = targetUsername;
-      // Check for existing chat rooms with both old and new owner names
       currentChatRoom = `chat_Dog Walker_${targetUsername}`;
       chatHeader.innerText = `Chatting with ${targetUsername} and ${targetDogname}`;
       
@@ -318,7 +317,7 @@
     }
 
     function listenForOwnerMessages() {
-      // For regular users, check both old and new owner chat rooms
+      // For regular users, listen to their specific chat room with owner
       currentChatRoom = `chat_Dog Walker_${username}`;
       listenToMessages();
     }
