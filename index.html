@@ -215,7 +215,7 @@
         username = inputField.value.trim();
         if (!username) return;
         
-        if (username === "InkBoyM OWNER") {
+        if (username === "Dog Walker") {
           isOwner = true;
           setupCard.style.display = 'none';
           chatApp.style.display = 'flex';
@@ -307,7 +307,8 @@
       event.target.classList.add('active');
       
       currentChatUser = targetUsername;
-      currentChatRoom = `chat_${username}_${targetUsername}`;
+      // Check for existing chat rooms with both old and new owner names
+      currentChatRoom = `chat_Dog Walker_${targetUsername}`;
       chatHeader.innerText = `Chatting with ${targetUsername} and ${targetDogname}`;
       
       messageInput.disabled = false;
@@ -317,8 +318,8 @@
     }
 
     function listenForOwnerMessages() {
-      // For regular users, listen to their specific chat room with owner
-      currentChatRoom = `chat_InkBoyM OWNER_${username}`;
+      // For regular users, check both old and new owner chat rooms
+      currentChatRoom = `chat_Dog Walker_${username}`;
       listenToMessages();
     }
 
@@ -339,7 +340,7 @@
           const data = doc.data();
           const msg = document.createElement('div');
           
-          if (data.senderType === 'owner') {
+          if (data.senderType === 'owner' || data.sender === 'InkBoyM OWNER' || data.sender === 'Dog Walker') {
             msg.className = 'message owner';
           } else {
             msg.className = 'message user';
@@ -350,7 +351,62 @@
         });
         
         messages.scrollTop = messages.scrollHeight;
+        
+        // If no messages found, try the old chat room format
+        if (snapshot.empty && !isOwner) {
+          const oldChatRoom = `chat_InkBoyM OWNER_${username}`;
+          const oldQ = query(
+            collection(db, 'chats', oldChatRoom, 'messages'), 
+            orderBy('timestamp', 'asc')
+          );
+          
+          onSnapshot(oldQ, (oldSnapshot) => {
+            if (!oldSnapshot.empty) {
+              messages.innerHTML = '';
+              oldSnapshot.forEach(doc => {
+                const data = doc.data();
+                const msg = document.createElement('div');
+                
+                if (data.senderType === 'owner' || data.sender === 'InkBoyM OWNER' || data.sender === 'Dog Walker') {
+                  msg.className = 'message owner';
+                } else {
+                  msg.className = 'message user';
+                }
+                
+                msg.innerHTML = `<strong>${data.sender}:</strong> ${data.text}`;
+                messages.appendChild(msg);
+              });
+              messages.scrollTop = messages.scrollTop;
+            }
+          });
+        }
       });
+      
+      // For owner, also check old chat rooms
+      if (isOwner && currentChatUser) {
+        const oldChatRoom = `chat_InkBoyM OWNER_${currentChatUser}`;
+        const oldQ = query(
+          collection(db, 'chats', oldChatRoom, 'messages'), 
+          orderBy('timestamp', 'asc')
+        );
+        
+        onSnapshot(oldQ, (oldSnapshot) => {
+          oldSnapshot.forEach(doc => {
+            const data = doc.data();
+            const msg = document.createElement('div');
+            
+            if (data.senderType === 'owner' || data.sender === 'InkBoyM OWNER' || data.sender === 'Dog Walker') {
+              msg.className = 'message owner';
+            } else {
+              msg.className = 'message user';
+            }
+            
+            msg.innerHTML = `<strong>${data.sender}:</strong> ${data.text}`;
+            messages.appendChild(msg);
+          });
+          messages.scrollTop = messages.scrollHeight;
+        });
+      }
     }
 
     // Initialize app
@@ -359,7 +415,7 @@
     
     if (savedUsername) {
       username = savedUsername;
-      if (username === 'InkBoyM OWNER') {
+      if (username === 'Dog Walker') {
         isOwner = true;
         setupCard.style.display = 'none';
         chatApp.style.display = 'flex';
@@ -383,4 +439,3 @@
     });
   </script>
 </body>
-</html>
